@@ -1,0 +1,33 @@
+{
+  "name": "Amaralina FC",
+  "short_name": "Amaralina FC",
+  "description": "Sistema de Estatísticas do Amaralina FC - Acompanhe partidas, jogadores e ranking",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#C5A059",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["sports", "productivity"],
+  "lang": "pt-BR",
+  "dir": "ltr"
+}
