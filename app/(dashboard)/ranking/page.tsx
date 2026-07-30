@@ -426,7 +426,7 @@ export default function RankingPage() {
               <img
                 src=" /goleiro-luva.png"
                 alt="Melhor Goleiro"
-                calssName="opacity-50 select-none object-contain invert"
+                className="opacity-50 select-none object-contain invert"
                 style={{ width: "45px", height: "40px" }}
               />            
             </div>
@@ -496,7 +496,7 @@ export default function RankingPage() {
               <img
                 src=" /melhor-dupla.png"
                 alt="Melhor Dupla"
-                calssName="opacity-50 select-none object-contain invert"
+                className="opacity-50 select-none object-contain invert"
                 style={{ width: "45px", height: "40px" }}
                 />
             </div>
@@ -536,7 +536,7 @@ export default function RankingPage() {
                 <img
                 src=" /goleiro-luva.png"
                 alt="Goleiros"
-                calssName="opacity-50 select-none object-contain invert"
+                className="opacity-50 select-none object-contain invert"
                 style={{ width: "35px", height: "30px" }}
                 />
                 <span className="text-[10px] md:text-sm">Goleiros</span>
@@ -548,7 +548,7 @@ export default function RankingPage() {
                 <img
                 src=" /melhor-dupla.png"
                 alt="Duplas"
-                calssName="opacity-50 select-none object-contain invert"
+                className="opacity-50 select-none object-contain invert"
                 style={{ width: "35px", height: "30px" }}
                 />
                 <span className="text-[10px] md:text-sm">Duplas</span>
