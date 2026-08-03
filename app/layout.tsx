@@ -7,10 +7,10 @@ import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
 import { DataProvider } from '@/contexts/data-context'
-import { VersionChecker } from '@/components/version-checker'
+// import { VersionChecker } from '@/components/version-checker'
 import './globals.css'
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 // Nao pre-renderizar estaticamente - o app usa autenticacao Supabase no cliente
 export const dynamic = 'force-dynamic'
@@ -59,7 +59,7 @@ export default function RootLayout({
         <AuthProvider>
           <DataProvider>
             {children}
-            <VersionChecker />
+            {/* <VersionChecker /> */}
           </DataProvider>
         </AuthProvider>
         <Analytics />
