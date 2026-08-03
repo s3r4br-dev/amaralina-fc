@@ -5,7 +5,7 @@
  * IMPORTANT: user is destructured from useAuth() on line 60
  * handleCreateUser uses user?.email on line 197
  */
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useData, type Profile } from "@/contexts/data-context"
 import { createClient } from "@/lib/supabase/client"
@@ -94,16 +94,16 @@ export default function UsuariosPage() {
 
   const profilesList = profiles || []
 
-  const filteredUsers = profilesList.filter((user) => {
+  const filteredUsers = useMemo(() => profilesList.filter((user) => {
     const matchesSearch = 
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase())
     const matchesRole = filterRole === "all" || user.role === filterRole
     return matchesSearch && matchesRole
-  })
+  }), [profilesList, search, filterRole])
 
-  const activeCount = profilesList.filter(u => u.status === "active").length
-  const adminCount = profilesList.filter(u => u.role === "admin").length
+  const activeCount = useMemo(() => profilesList.filter(u => u.status === "active").length, [profilesList])
+  const adminCount = useMemo(() => profilesList.filter(u => u.role === "admin").length, [profilesList])
 
   // Jogadores disponíveis para vínculo
   const availablePlayers = (jogadores || []).filter(j => {

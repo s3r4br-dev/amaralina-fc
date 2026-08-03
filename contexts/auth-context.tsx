@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   // Load user on mount and listen for auth changes
   // IMPORTANTE: Timeout de 5s para evitar loop infinito
@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [supabase, router])
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
       // NAO setar isLoading aqui - deixar o onAuthStateChange gerenciar
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -232,9 +232,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : "Erro ao fazer login" }
     }
-  }
+  }, [supabase])
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = useCallback(async (email: string, password: string, name: string) => {
     try {
       setIsLoading(true)
       
@@ -263,9 +263,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [supabase])
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = useCallback(async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
@@ -279,9 +279,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : "Erro ao enviar email" }
     }
-  }
+  }, [supabase])
 
-  const updatePassword = async (newPassword: string) => {
+  const updatePassword = useCallback(async (newPassword: string) => {
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
@@ -295,29 +295,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : "Erro ao atualizar senha" }
     }
-  }
+  }, [supabase])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await supabase.auth.signOut()
     setUser(null)
     setSupabaseUser(null)
     router.push("/login")
-  }
+  }, [supabase, router])
+
+  const value = useMemo(() => ({
+    user,
+    supabaseUser,
+    isLoading,
+    login,
+    logout,
+    register,
+    resetPassword,
+    updatePassword,
+    isAdmin: user?.role === "admin",
+  }), [user, supabaseUser, isLoading, login, logout, register, resetPassword, updatePassword])
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        supabaseUser,
-        isLoading,
-        login,
-        logout,
-        register,
-        resetPassword,
-        updatePassword,
-        isAdmin: user?.role === "admin",
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

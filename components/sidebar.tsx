@@ -5,7 +5,7 @@
  * Version: 31.0 - Glassmorphism + Menu Hamburguer Mobile
  */
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
@@ -49,13 +49,12 @@ export function Sidebar() {
   const { user, logout, isAdmin } = useAuth()
   const { jogadores, getFilteredPartidas } = useData()
   
-  const partidasCount = getFilteredPartidas().length
-  const jogadoresAtivos = (jogadores || []).filter(j => j.status === "active")
-  const jogadoresCount = jogadoresAtivos.length
+  const partidasCount = useMemo(() => getFilteredPartidas().length, [getFilteredPartidas])
+  const jogadoresCount = useMemo(() => (jogadores || []).filter(j => j.status === "active").length, [jogadores])
 
-  const filteredItems = menuItems.filter(
+  const filteredItems = useMemo(() => menuItems.filter(
     (item) => !item.adminOnly || isAdmin
-  )
+  ), [isAdmin])
 
   // Estimativa de consumo de banco de dados
   // Calculo aproximado: cada partida ~2KB + cada partida_jogador ~0.5KB + cada jogador ~1KB

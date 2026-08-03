@@ -511,12 +511,13 @@ export default function HallDaFamaPage() {
     if (partidasDoAno.length === 0) return []
 
     const statsMap = new Map<number, any>()
+    const jogadoresMap = new Map(jogadores.map(j => [j.id, j]))
 
     partidasDoAno.forEach(partida => {
       if (!partida.jogadores_partida) return
 
       partida.jogadores_partida.forEach((jp: any) => {
-        const jogador = jogadores.find(j => j.id === jp.jogador_id)
+        const jogador = jogadoresMap.get(jp.jogador_id)
         if (!jogador) return
 
         if (!statsMap.has(jogador.id)) {
@@ -605,6 +606,8 @@ export default function HallDaFamaPage() {
       total: number 
     }> = {}
 
+    const jogadoresMap = new Map(jogadores.map(j => [j.id, j]))
+
     partidasDoAno.forEach(partida => {
       if (!partida.jogadores_partida || partida.jogadores_partida.length < 2) return
 
@@ -617,8 +620,8 @@ export default function HallDaFamaPage() {
           const key = `${id1}-${id2}`
 
           if (!duoStats[key]) {
-            const p1 = jogadores.find((j: any) => j.id === id1)
-            const p2 = jogadores.find((j: any) => j.id === id2)
+            const p1 = jogadoresMap.get(id1)
+            const p2 = jogadoresMap.get(id2)
             duoStats[key] = {
               player1Id: id1,
               player2Id: id2,

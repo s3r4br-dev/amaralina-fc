@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Medal, Goal, HandHelping, Shield, TrendingUp, TrendingDown, Minus, Users2, Trophy, Award } from "lucide-react"
+import { Medal, Shield, TrendingUp, TrendingDown, Minus, Users2, Trophy, Award } from "lucide-react"
+import { useCallback } from "react"
 import { useData, type JogadorStats, type Partida } from "@/contexts/data-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -202,12 +203,15 @@ export default function RankingPage() {
       }
     })
     
+    // Build a Map for O(1) jogador lookups instead of repeated .find() calls
+    const jogadoresMap = new Map((jogadores || []).map(j => [j.id, j]))
+
     // Converter para array e calcular taxa de vitória
     const duplas: DuplaStats[] = []
     duplaMap.forEach((stats, _key) => {
       if (stats.total >= 2) { // Mínimo 2 partidas juntos
-        const player1 = (jogadores || []).find(j => j.id === stats.p1)
-        const player2 = (jogadores || []).find(j => j.id === stats.p2)
+        const player1 = jogadoresMap.get(stats.p1)
+        const player2 = jogadoresMap.get(stats.p2)
         
         if (player1 && player2) {
           duplas.push({
@@ -230,12 +234,12 @@ export default function RankingPage() {
       if (b.winsTogether !== a.winsTogether) return b.winsTogether - a.winsTogether
       
       // 2º - Média de gols combinados (calcular com base nos jogadores)
-      const player1A = jogadores.find(j => j.id === a.player1Id)
-      const player2A = jogadores.find(j => j.id === a.player2Id)
+      const player1A = jogadoresMap.get(a.player1Id)
+      const player2A = jogadoresMap.get(a.player2Id)
       const goalsA = ((player1A?.goals || 0) + (player2A?.goals || 0)) / 2
       
-      const player1B = jogadores.find(j => j.id === b.player1Id)
-      const player2B = jogadores.find(j => j.id === b.player2Id)
+      const player1B = jogadoresMap.get(b.player1Id)
+      const player2B = jogadoresMap.get(b.player2Id)
       const goalsB = ((player1B?.goals || 0) + (player2B?.goals || 0)) / 2
       
       if (goalsB !== goalsA) return goalsB - goalsA
@@ -247,6 +251,9 @@ export default function RankingPage() {
       return b.matchesTogether - a.matchesTogether
     }).slice(0, 10)
   }, [partidas, jogadores])
+
+  // Map for O(1) jogador lookups in JSX rendering
+  const jogadoresMapForDuplas = useMemo(() => new Map((jogadores || []).map(j => [j.id, j])), [jogadores])
 
   // Preparar dados com notas de desempenho (0-10.0)
   // Notas premiam: Constância (presença), Eficiência (aproveitamento) e Volume de Impacto
@@ -446,9 +453,9 @@ export default function RankingPage() {
                       <div className="flex -space-x-2">
                         {/* Player 1 */}
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0088CC] to-[#006699] flex items-center justify-center overflow-hidden border-2 border-[#FF6B35]">
-                          {jogadores.find(j => j.id === melhorDupla.player1Id)?.photo_url ? (
+                          {jogadoresMapForDuplas.get(melhorDupla.player1Id)?.photo_url ? (
                             <Image
-                              src={jogadores.find(j => j.id === melhorDupla.player1Id)?.photo_url || ''}
+                              src={jogadoresMapForDuplas.get(melhorDupla.player1Id)?.photo_url || ''}
                               alt={melhorDupla.player1Name || 'Jogador 1'}
                               width={40}
                               height={40}
@@ -462,9 +469,9 @@ export default function RankingPage() {
                         </div>
                         {/* Player 2 */}
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0088CC] to-[#006699] flex items-center justify-center overflow-hidden border-2 border-[#FF6B35]">
-                          {jogadores.find(j => j.id === melhorDupla.player2Id)?.photo_url ? (
+                          {jogadoresMapForDuplas.get(melhorDupla.player2Id)?.photo_url ? (
                             <Image
-                              src={jogadores.find(j => j.id === melhorDupla.player2Id)?.photo_url || ''}
+                              src={jogadoresMapForDuplas.get(melhorDupla.player2Id)?.photo_url || ''}
                               alt={melhorDupla.player2Name || 'Jogador 2'}
                               width={40}
                               height={40}
@@ -866,9 +873,9 @@ export default function RankingPage() {
                                 <div className="flex -space-x-2">
                                   {/* Player 1 */}
                                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C5A059] to-[#967948] flex items-center justify-center border-2 border-[#D4B300] overflow-hidden">
-                                    {jogadores.find(j => j.id === dupla.player1Id)?.photo_url ? (
+                                    {jogadoresMapForDuplas.get(dupla.player1Id)?.photo_url ? (
                                       <Image
-                                        src={jogadores.find(j => j.id === dupla.player1Id)?.photo_url || ''}
+                                        src={jogadoresMapForDuplas.get(dupla.player1Id)?.photo_url || ''}
                                         alt={dupla.player1Name || 'Jogador 1'}
                                         width={40}
                                         height={40}
@@ -882,9 +889,9 @@ export default function RankingPage() {
                                   </div>
                                   {/* Player 2 */}
                                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0088CC] to-[#006699] flex items-center justify-center border-2 border-[#D4B300] overflow-hidden">
-                                    {jogadores.find(j => j.id === dupla.player2Id)?.photo_url ? (
+                                    {jogadoresMapForDuplas.get(dupla.player2Id)?.photo_url ? (
                                       <Image
-                                        src={jogadores.find(j => j.id === dupla.player2Id)?.photo_url || ''}
+                                        src={jogadoresMapForDuplas.get(dupla.player2Id)?.photo_url || ''}
                                         alt={dupla.player2Name || 'Jogador 2'}
                                         width={40}
                                         height={40}

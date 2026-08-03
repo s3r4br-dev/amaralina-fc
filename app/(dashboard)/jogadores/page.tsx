@@ -796,12 +796,12 @@ export default function JogadoresPage() {
     return [...withMatches, ...withoutMatches]
   }, [jogadoresComStats, search, selectedPosition, sortBy])
 
-  const activeCount = jogadoresComStats.filter(p => p.status === "active").length
-  const totalGoals = jogadoresComStats.reduce((sum, p) => sum + (p.goals || 0), 0)
-  const totalAssists = jogadoresComStats.reduce((sum, p) => sum + (p.assists || 0), 0)
-  const avgRating = jogadoresComStats.length > 0 
+  const activeCount = useMemo(() => jogadoresComStats.filter(p => p.status === "active").length, [jogadoresComStats])
+  const totalGoals = useMemo(() => jogadoresComStats.reduce((sum, p) => sum + (p.goals || 0), 0), [jogadoresComStats])
+  const totalAssists = useMemo(() => jogadoresComStats.reduce((sum, p) => sum + (p.assists || 0), 0), [jogadoresComStats])
+  const avgRating = useMemo(() => jogadoresComStats.length > 0 
     ? Math.round(jogadoresComStats.reduce((sum, p) => sum + (p.rating || 0), 0) / jogadoresComStats.length) 
-    : 0
+    : 0, [jogadoresComStats])
 
   // Handlers
   const handleOpenAddModal = () => {

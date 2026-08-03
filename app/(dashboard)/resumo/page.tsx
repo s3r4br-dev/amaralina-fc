@@ -5,7 +5,7 @@
  * Exibe a ultima partida cadastrada com opcoes de compartilhamento
  */
 
-import { useRef, useState, useMemo } from "react"
+import { useRef, useState, useMemo, useCallback } from "react"
 import { useData } from "@/contexts/data-context"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -26,7 +26,6 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
-import { toPng } from "html-to-image"
 
 export default function ResumoPartidaPage() {
   const { partidas, jogadores } = useData()
@@ -57,16 +56,22 @@ export default function ResumoPartidaPage() {
     })
   }
 
-  // Obter jogadores de cada time — usando o campo correto "partida_jogadores"
-  const getTeamPlayers = (team: "A" | "B") => {
+  // Obter jogadores de cada time — memoizado para evitar re-cálculo
+  const timeA = useMemo(() => {
     if (!ultimaPartida?.partida_jogadores) return []
-    return ultimaPartida.partida_jogadores.filter(mp => mp.team === team)
-  }
+    return ultimaPartida.partida_jogadores.filter(mp => mp.team === "A")
+  }, [ultimaPartida])
 
-  // Encontrar dados do jogador
-  const getJogador = (jogadorId: number) => {
-    return jogadores?.find(j => j.id === jogadorId)
-  }
+  const timeB = useMemo(() => {
+    if (!ultimaPartida?.partida_jogadores) return []
+    return ultimaPartida.partida_jogadores.filter(mp => mp.team === "B")
+  }, [ultimaPartida])
+
+  // Map for O(1) jogador lookups
+  const jogadoresMap = useMemo(() => new Map((jogadores || []).map(j => [j.id, j])), [jogadores])
+
+  // Encontrar dados do jogador (usa Map para O(1))
+  const getJogador = useCallback((jogadorId: number) => jogadoresMap.get(jogadorId), [jogadoresMap])
 
   // Gerar imagem com html-to-image (mais robusto que html2canvas)
   const generateImage = async (): Promise<Blob | null> => {
@@ -90,7 +95,8 @@ export default function ResumoPartidaPage() {
       // Aguardar imagens carregarem
       await new Promise((resolve) => setTimeout(resolve, 300))
       
-      // Gerar PNG com html-to-image
+      // Gerar PNG com html-to-image (dynamic import para reduzir bundle inicial)
+      const { toPng } = await import("html-to-image")
       const dataUrl = await toPng(cardRef.current, {
         quality: 1.0,
         pixelRatio: 2,
@@ -219,10 +225,6 @@ export default function ResumoPartidaPage() {
       setIsGenerating(false)
     }
   }
-
-  // Time A e Time B — usando partida_jogadores
-  const timeA = getTeamPlayers("A")
-  const timeB = getTeamPlayers("B")
 
   // Usar score_a/score_b do banco de dados (fonte de verdade)
   const golsTimeA = ultimaPartida?.score_a ?? 0

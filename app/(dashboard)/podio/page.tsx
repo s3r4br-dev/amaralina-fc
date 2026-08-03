@@ -42,13 +42,14 @@ function AnimatedCounter({ value, duration = 1.5 }: { value: number | string; du
 
 // Componente de particulas douradas (confetes)
 function GoldenParticles() {
-  const particles = Array.from({ length: 30 }, (_, i) => ({
+  const particles = useMemo(() => Array.from({ length: 30 }, (_, i) => ({
     id: i,
     left: Math.random() * 100,
     delay: Math.random() * 3,
     duration: 3 + Math.random() * 2,
     size: 4 + Math.random() * 8,
-  }))
+    xOffset: (Math.random() - 0.5) * 100,
+  })), [])
   
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -66,7 +67,7 @@ function GoldenParticles() {
           }}
           animate={{
             y: ["0vh", "100vh"],
-            x: [0, (Math.random() - 0.5) * 100],
+            x: [0, p.xOffset],
             rotate: [0, 360],
             opacity: [1, 0.8, 0],
           }}

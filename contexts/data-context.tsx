@@ -335,46 +335,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-      // Load jogadores
-      const { data: jogadoresData, error: jogadoresError } = await supabase
-        .from("jogadores")
-        .select("*")
-        .order("name")
-        .abortSignal(controller.signal)
+      // Run all independent queries in parallel
+      const [jogadoresResult, partidasResult, profilesResult, settingsResult] = await Promise.all([
+        supabase.from("jogadores").select("*").order("name").abortSignal(controller.signal),
+        supabase.from("partidas").select(`*, partida_jogadores (*)`).order("date", { ascending: false }).abortSignal(controller.signal),
+        supabase.from("profiles").select("*").order("name").abortSignal(controller.signal),
+        supabase.from("app_settings").select("brand_logo").eq("id", 1).single().abortSignal(controller.signal),
+      ])
 
-      if (jogadoresError) throw jogadoresError
-      setJogadores(jogadoresData || [])
+      if (jogadoresResult.error) throw jogadoresResult.error
+      setJogadores(jogadoresResult.data || [])
 
-      // Load partidas with jogadores
-      const { data: partidasData, error: partidasError } = await supabase
-        .from("partidas")
-        .select(`*, partida_jogadores (*)`)
-        .order("date", { ascending: false })
-        .abortSignal(controller.signal)
+      if (partidasResult.error) throw partidasResult.error
+      setPartidas(partidasResult.data || [])
 
-      if (partidasError) throw partidasError
-      setPartidas(partidasData || [])
+      if (profilesResult.error) throw profilesResult.error
+      setProfiles(profilesResult.data || [])
 
-      // Load profiles
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("name")
-        .abortSignal(controller.signal)
-
-      if (profilesError) throw profilesError
-      setProfiles(profilesData || [])
-
-      // Load brand logo from app_settings
-      const { data: settingsData } = await supabase
-        .from("app_settings")
-        .select("brand_logo")
-        .eq("id", 1)
-        .single()
-        .abortSignal(controller.signal)
-
-      if (settingsData?.brand_logo) {
-        setBrandLogoState(settingsData.brand_logo)
+      if (settingsResult.data?.brand_logo) {
+        setBrandLogoState(settingsResult.data.brand_logo)
       }
 
       clearTimeout(timeoutId)
@@ -420,20 +399,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
       .subscribe()
     channels.push(jogadoresChannel)
     
+    // Shared fetch for partidas (used by both channels to avoid duplicate queries)
+    const fetchPartidas = async () => {
+      const { data } = await supabase
+        .from("partidas")
+        .select(`*, partida_jogadores (*)`)
+        .order("date", { ascending: false })
+      if (data) setPartidas(data)
+    }
+
     // Partidas channel
     const partidasChannel = supabase
       .channel("partidas-changes")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "partidas" },
-        async () => {
-          // Reload partidas with jogadores on any change
-          const { data } = await supabase
-            .from("partidas")
-            .select(`*, partida_jogadores (*)`)
-            .order("date", { ascending: false })
-          if (data) setPartidas(data)
-        }
+        fetchPartidas
       )
       .subscribe()
     channels.push(partidasChannel)
@@ -444,14 +425,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "partida_jogadores" },
-        async () => {
-          // Reload partidas with jogadores on any change
-          const { data } = await supabase
-            .from("partidas")
-            .select(`*, partida_jogadores (*)`)
-            .order("date", { ascending: false })
-          if (data) setPartidas(data)
-        }
+        fetchPartidas
       )
       .subscribe()
     channels.push(partidaJogadoresChannel)
@@ -735,20 +709,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [supabase])
 
-  // Filtrar partidas por ano selecionado
-  const getFilteredPartidas = useCallback(() => {
+  // Filtrar partidas por ano selecionado (memoized for reuse)
+  const filteredPartidasMemo = useMemo(() => {
     if (selectedYear === "all") {
       return partidas.filter(p => p.status === "finalizado")
     }
     return partidas.filter(p => p.status === "finalizado" && p.date.startsWith(selectedYear))
   }, [partidas, selectedYear])
 
-  // Calcular estatísticas dos jogadores filtradas por ano
-  const getJogadorStatsByYear = useCallback((): JogadorStats[] => {
-    const filteredPartidas = getFilteredPartidas()
-    
+  const getFilteredPartidas = useCallback(() => filteredPartidasMemo, [filteredPartidasMemo])
+
+  // Calcular estatísticas dos jogadores filtradas por ano (memoized - computed once, shared by all ranking functions)
+  const jogadorStatsMemo = useMemo(() => {
     // Ordenar partidas por data para calcular faltas consecutivas
-    const sortedPartidas = [...filteredPartidas].sort((a, b) => 
+    const sortedPartidas = [...filteredPartidasMemo].sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     )
     
@@ -915,7 +889,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         lastMatchDate, // Data da última partida jogada
       }
     })
-  }, [jogadores, getFilteredPartidas])
+  }, [jogadores, filteredPartidasMemo])
+
+  const getJogadorStatsByYear = useCallback((): JogadorStats[] => jogadorStatsMemo, [jogadorStatsMemo])
 
   // Computed stats (filtradas por ano)
   const getTopArtilheiros = useCallback((limit = 10) => {
