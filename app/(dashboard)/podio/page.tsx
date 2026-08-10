@@ -6,7 +6,7 @@ import { useData, type JogadorStats } from "@/contexts/data-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { YearFilter } from "@/components/year-filter"
 import { useMemo, useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { motion } from "@/lib/motion"
 
 // Componente de contador animado
 function AnimatedCounter({ value, duration = 1.5 }: { value: number | string; duration?: number }) {

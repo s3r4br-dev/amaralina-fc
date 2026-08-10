@@ -3,14 +3,9 @@
  * Version: 30.0 - PWA Support + Mobile Optimized
  */
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
 import { DataProvider } from '@/contexts/data-context'
-// import { VersionChecker } from '@/components/version-checker'
 import './globals.css'
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 // Nao pre-renderizar estaticamente - o app usa autenticacao Supabase no cliente
 export const dynamic = 'force-dynamic'
@@ -55,14 +50,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.variable} font-sans antialiased overscroll-none`}>
+      <body className="font-sans antialiased overscroll-none">
         <AuthProvider>
           <DataProvider>
             {children}
-            {/* <VersionChecker /> */}
           </DataProvider>
         </AuthProvider>
-        <Analytics />
       </body>
     </html>
   )

@@ -56,7 +56,6 @@ import {
   CheckCircle
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { toPng } from "html-to-image"
 import {
   DndContext,
   DragOverlay,
@@ -1973,6 +1972,7 @@ export default function TecnicoPage() {
   const handleExport = async () => {
     if (!fieldRef.current) return
     try {
+      const { toPng } = await import("html-to-image")
       const dataUrl = await toPng(fieldRef.current, { quality: 0.95, pixelRatio: 2 })
       const link = document.createElement("a")
       link.download = `palpite-${user?.name || "tecnico"}.png`

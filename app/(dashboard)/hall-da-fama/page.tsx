@@ -7,7 +7,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import Image from "next/image"
-import { motion } from "framer-motion"
+import { motion } from "@/lib/motion"
 import { useData } from "@/contexts/data-context"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"

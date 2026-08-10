@@ -5,7 +5,6 @@
  * Version: 11.0 - Ultra Premium Glassmorphism
  */
 import { useState, useMemo, useRef } from "react"
-import { toPng } from "html-to-image"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
@@ -398,6 +397,7 @@ function PlayerDetailsModal({
       })
       await new Promise((r) => setTimeout(r, 200))
       
+      const { toPng } = await import("html-to-image")
       const dataUrl = await toPng(cardRef.current, {
         quality: 1.0,
         pixelRatio: 2,
