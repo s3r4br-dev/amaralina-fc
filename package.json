@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-  "dev": "next dev --hostname 3.0.0.0",
+  "dev": "next dev --https://s3r4br-dev-amaralina-od0z.bolt.host/",
   "build": "next build",
-  "start": "next start --hostname 3.0.0.0",
+  "start": "next start --https://s3r4br-dev-amaralina-od0z.bolt.host/",
   "lint": "eslint ."
   },
   "dependencies": {
